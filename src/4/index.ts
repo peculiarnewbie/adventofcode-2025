@@ -1,68 +1,73 @@
 import * as R from "remeda";
-const input = await Bun.file(`./input.txt`).text();
-// const input = await Bun.file(`./test.txt`).text();
 
-const split = input.split("\n");
-
-const idx = split.findIndex((x) => x === "");
-
-const [rangesRaw, num] = R.splitAt(split, idx);
-const ingredients = num.filter((x) => x !== "").map((x) => Number(x));
-const ranges = rangesRaw.map((x) => x.split("-").map((y) => Number(y)) as [number, number]);
-// console.log(ranges, ingredients);
-
-const part1 = () => {
-    let count = 0;
-
-    for (const ingredient of ingredients) {
-        for (const [start, end] of ranges) {
-            if (ingredient >= start && ingredient <= end) {
-                count++;
-                break;
-            }
-        }
-    }
-
-    console.log(count);
+const getLines = async () => {
+  // const input = await Bun.file(`./test.txt`).text();
+  const input = await Bun.file(`./input.txt`).text();
+  const trimmed = input.trim();
+  const split = trimmed.split("\n");
+  return split.map((line) => line.trim());
 };
 
-const part2 = (range: [number, number][]) => {
-    const sortedRange = range.toSorted(([x, _a], [y, _b]) => x - y);
-    console.log(sortedRange);
+const surround: [number, number][] = [
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+];
 
-    let newRanges: [number, number][] = [];
+const lookAround = (lines: string[][], pos: [number, number]) => {
+  const [x, y] = pos;
+  if (lines[y]![x] !== "@") return false;
+  let count = 0;
 
-    for (const [start, end] of sortedRange) {
-        let push = true;
-        for (let i = 0; i < newRanges.length; i++) {
-            const [s, e] = newRanges[i]!;
-            if (start <= e) {
-                if (end > e) {
-                    newRanges[i] = [s, end];
-                    push = false;
-                    break;
-                }
-                push = false;
-            }
-        }
-        if (push) newRanges.push([start, end]);
-    }
+  surround.forEach(([dx, dy]) => {
+    const [nx, ny] = [x + dx, y + dy];
+    if (!lines[ny]) return;
+    if (!lines[ny][nx]) return;
+    if (lines[ny][nx] === "@") count++;
+  });
 
-    if (newRanges.length < range.length) {
-        console.log("here", newRanges, range);
-        return part2(newRanges);
-    } else {
-        console.log("final", newRanges);
-        let count = 0;
-        newRanges.forEach(([start, end]) => {
-            count += end - start + 1;
-        });
-        console.log(count);
-    }
+  return count < 4;
 };
 
-part2(ranges);
-// 422445408405043 not right
-// 422445408405031 not right
+const part1 = (lines: string[]) => {
+  const map = lines.map((line) => {
+    return line.split("");
+  });
 
-export {};
+  const copy: string[][] = JSON.parse(JSON.stringify(map));
+
+  let count = 0;
+  map.forEach((line, i) => {
+    line.forEach((char, j) => {
+      const res = lookAround(map, [j, i]);
+      if (res) {
+        count++;
+        copy[i][j] = ".";
+      }
+    });
+  });
+
+  const asString = copy.map((line) => line.join(""));
+
+  return [count, asString] as [number, string[]];
+};
+
+const part2 = (lines: string[]) => {
+  let total = 0;
+  let currentLines: string[] = JSON.parse(JSON.stringify(lines));
+  while (true) {
+    const [count, copy] = part1(currentLines);
+    total += count;
+    currentLines = copy;
+    if (count === 0) break;
+  }
+  console.log(total);
+};
+
+// part1(await getLines());
+part2(await getLines());
