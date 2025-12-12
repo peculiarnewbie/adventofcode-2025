@@ -1,8 +1,8 @@
 import * as R from "remeda";
 
 const processInput = async (part: 1 | 2 = 1) => {
-  const text = await Bun.file("./input.txt").text();
-  // const text = await Bun.file("./test.txt").text();
+  // const text = await Bun.file("./input.txt").text();
+  const text = await Bun.file("./test.txt").text();
   const lines = text.split("\n").map((line) => line.trim());
   lines.pop();
   const split = lines.map((line) => line.split(","));
@@ -58,30 +58,13 @@ const part2 = (input: Input) => {
 
   console.log("coordMap", coordMap.size);
 
-  function create2DArray(rows: number, cols: number) {
-    const array: string[][] = [];
-    for (let i = 0; i < rows; i++) {
-      const row: string[] = [];
-      for (let j = 0; j < cols; j++) {
-        row.push(".");
-      }
-      array.push(row);
-    }
-    return array;
-  }
-  let map: string[][] = Array.from({ length: edgeY + 1 }, () =>
-    Array.from({ length: edgeX + 1 }, () => "."),
-  );
+  const dirs = ["U", "R", "D", "L", "UR", "UL", "DR", "DL"] as const;
+  type Dir = (typeof dirs)[number];
 
-  console.log("map", map.length);
-
-  for (let i = 0; i <= edgeY; i++) {
-    for (let j = 0; j <= edgeX; j++) {
-      if (coordMap.has(String(j) + "," + String(i))) {
-        map[i]![j] = "#";
-      }
-    }
-  }
+  const coordData: { coord: Coord; dir: Dir } = {
+    coord: { x: 0, y: 0 },
+    dir: "U",
+  };
 
   const neighbors = input.map((_, i) => {
     const first = input[i]!;
